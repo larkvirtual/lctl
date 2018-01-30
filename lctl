@@ -1,0 +1,55 @@
+#!/bin/bash
+#Needed bash v4 due to associative map usage
+
+if [ $# != 1 ]; then
+    echo "Linkable files/dirs pattern: link-*"
+    echo "Usage:   <existent-or-not-existent-link>"
+    echo "Example: .ssh"
+    exit 0
+fi
+
+declare -A map
+
+if [ -L "$1" ]; then
+    lnktarget=$(stat $1 | head -1 | awk '{print $4}')
+    echo "Currently '$1' linked to '$lnktarget'"
+else
+    echo "'$1' not linked yet"
+fi
+echo
+
+echo "$1 can be linked to:"
+mapCount=0
+for i in $(ls -a | grep $1-); do # link candidates format: $1-
+                                 # example: .ssh-work, .ssh-home
+#    if [ -d "$i" ]; then # files like .ssh-fix1 have to be igroned
+        map[$mapCount]=$i
+        echo "[$mapCount] = $i"
+        mapCount=$((mapCount+1))
+#    fi
+done
+totalLinks=$mapCount
+
+if [ $totalLinks = 0 ]; then
+    echo "No link candidates in format '$1-*' for directories..."
+    exit 0
+fi
+
+echo
+echo "Relink to number (Ctrl-C to cancel): "
+read number
+if [ $number -ge 0 ] && [ $number -lt $totalLinks ]; then
+    rm -f "$1" # removing existent (or not) linkfile
+    ln -s "${map[$number]}" "$1"
+    if [ -L "$1" ]; then
+        lnktarget=$(stat $1 | head -1 | awk '{print $4}')
+        echo "Currently '$1' linked to '$lnktarget'"
+        exit 0
+    else
+        echo "'$1' not linked :-("
+        exit 1
+    fi
+else
+    echo "Wrong input: $number not in range [0 .. $totalLinks)"
+    exit 1
+fi
