@@ -1,6 +1,6 @@
 install:
 	@cp lctl /usr/bin
-	-@grep -q "altlinux" /etc/os-release 2> /dev/null; \
+	-@grep -q "altlinux" /etc/os-release 2> /dev/null && grep -qE 'VERSION_ID=p?8' /etc/os-release; \
 if [ $$? = 0 ]; then \
 echo "Installing required package bash4, as existing /bin/bash is version 3"; \
 apt-get install bash4 -y && \
